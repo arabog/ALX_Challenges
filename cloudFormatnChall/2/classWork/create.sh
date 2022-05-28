@@ -2,3 +2,5 @@ aws cloudformation create-stack --stack-name $1 --template-body file://$2  --par
 
 
 # ./create.sh myfirstinfrademo network.yml network-parameters.json
+
+# chmod u+r+x create.sh
