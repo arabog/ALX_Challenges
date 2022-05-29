@@ -22,6 +22,11 @@ Parameters:
       Type: String
       Default: 10.0.1.0/24
 
+  OnPremGateway:
+    Description: Please enter the IP address of the on-prem VPN Appliance
+    Type: String
+    Default: 1.2.3.4
+
 
 
 Resources:
@@ -67,10 +72,11 @@ Resources:
 
   DefaultPrivateRoute1:
       Type: AWS::EC2::Route
+      DependsOn: AttachVpnGateway
       Properties:
           RouteTableId: !Ref PrivateRouteTable1
           DestinationCidrBlock: 0.0.0.0/0
-          # NatGatewayId: !Ref NatGateway1
+          NatGatewayId: !Ref VPCVGW
 
   PrivateSubnet1RouteTableAssociation:
       Type: AWS::EC2::SubnetRouteTableAssociation
@@ -91,10 +97,81 @@ Resources:
       Properties:
           RouteTableId: !Ref PrivateRouteTable2
           DestinationCidrBlock: 0.0.0.0/0
-          # NatGatewayId: !Ref NatGateway2
+          NatGatewayId: !Ref VPCVGW
 
   PrivateSubnet2RouteTableAssociation:
       Type: AWS::EC2::SubnetRouteTableAssociation
       Properties:
           RouteTableId: !Ref PrivateRouteTable2
           SubnetId: !Ref PrivateSubnet2
+
+  OurVPN:        
+        Type: "AWS::EC2::VPNConnection"
+        Properties: 
+            Type: ipsec.1
+            StaticRoutesOnly: true
+            CustomerGatewayId: !Ref ONPREMCGW
+            VpnGatewayId: !Ref VPCVGW
+
+  VPCVGW:
+      Type: "AWS::EC2::VPNGateway"
+      Properties: 
+          Type: ipsec.1
+          Tags:
+              - Key: Name
+                Value: !Sub "${EnvironmentName} Amazon-side Gateway"
+                
+  AttachVpnGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      VpnGatewayId: 
+          Ref: VPCVGW
+
+  ONPREMCGW:
+    Type: "AWS::EC2::CustomerGateway"
+    Properties:
+      BgpAsn : 65000
+      IpAddress: !Ref 'OnPremGateway'
+      Type: ipsec.1
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName} On Prem Gateway"
+
+# Outputs: 
+
+#   VPC: 
+#       Description: A reference to the created VPC
+#       Value: !Ref VPC
+#       Export:
+#         Name: !Sub ${EnvironmentName}-VPCID
+
+#   PrivateSubnets:
+#       Description: A list of the private subnets
+#       Value: !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2 ]]
+#       Export:
+#         Name: !Sub ${EnvironmentName}-PRIV-NETS
+
+#   PrivateSubnet1:
+#       Description: A reference to the private subnet in the 1st Availability Zone
+#       Value: !Ref PrivateSubnet1
+#       Export:
+#         Name: !Sub ${EnvironmentName}-PRI1-SN
+
+#   PrivateSubnet2: 
+#       Description: A reference to the private subnet in the 2nd Availability Zone
+#       Value: !Ref PrivateSubnet2
+#       Export:
+#         Name: !Sub ${EnvironmentName}-PRI2-SN
+
+#   VPCPrivateRouteTable1:
+#       Description: Private Routing AZ1
+#       Value: !Ref PrivateRouteTable1
+#       Export:
+#         Name: !Sub ${EnvironmentName}-PRI1-RT
+
+#   VPCPrivateRouteTable2:
+#       Description: Private Routing AZ2
+#       Value: !Ref PrivateRouteTable2
+#       Export:
+#         Name: !Sub ${EnvironmentName}-PRI2-RT
