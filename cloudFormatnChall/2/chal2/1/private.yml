@@ -71,12 +71,12 @@ Resources:
                 Value: !Sub ${EnvironmentName} Private Routes (AZ1)
 
   DefaultPrivateRoute1:
-      Type: AWS::EC2::Route
       DependsOn: AttachVpnGateway
+      Type: AWS::EC2::Route
       Properties:
           RouteTableId: !Ref PrivateRouteTable1
           DestinationCidrBlock: 0.0.0.0/0
-          NatGatewayId: !Ref VPCVGW
+          GatewayId: !Ref VPCVGW
 
   PrivateSubnet1RouteTableAssociation:
       Type: AWS::EC2::SubnetRouteTableAssociation
@@ -94,10 +94,11 @@ Resources:
 
   DefaultPrivateRoute2:
       Type: AWS::EC2::Route
+      DependsOn: AttachVpnGateway
       Properties:
           RouteTableId: !Ref PrivateRouteTable2
           DestinationCidrBlock: 0.0.0.0/0
-          NatGatewayId: !Ref VPCVGW
+          GatewayId: !Ref VPCVGW
 
   PrivateSubnet2RouteTableAssociation:
       Type: AWS::EC2::SubnetRouteTableAssociation
@@ -106,12 +107,14 @@ Resources:
           SubnetId: !Ref PrivateSubnet2
 
   OurVPN:        
-        Type: "AWS::EC2::VPNConnection"
-        Properties: 
-            Type: ipsec.1
-            StaticRoutesOnly: true
-            CustomerGatewayId: !Ref ONPREMCGW
-            VpnGatewayId: !Ref VPCVGW
+      Type: "AWS::EC2::VPNConnection"
+      Properties: 
+          Type: ipsec.1
+          StaticRoutesOnly: true
+          CustomerGatewayId: 
+              !Ref ONPREMCGW
+          VpnGatewayId: 
+              !Ref VPCVGW
 
   VPCVGW:
       Type: "AWS::EC2::VPNGateway"
@@ -120,23 +123,26 @@ Resources:
           Tags:
               - Key: Name
                 Value: !Sub "${EnvironmentName} Amazon-side Gateway"
-                
+
   AttachVpnGateway:
-    Type: AWS::EC2::VPCGatewayAttachment
-    Properties:
-      VpcId: !Ref VPC
-      VpnGatewayId: 
-          Ref: VPCVGW
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+          VpcId: !Ref VPC
+          VpnGatewayId:
+              Ref: VPCVGW
 
   ONPREMCGW:
-    Type: "AWS::EC2::CustomerGateway"
-    Properties:
-      BgpAsn : 65000
-      IpAddress: !Ref 'OnPremGateway'
-      Type: ipsec.1
-      Tags:
-        - Key: Name
-          Value: !Sub "${EnvironmentName} On Prem Gateway"
+      Type: "AWS::EC2::CustomerGateway"
+      Properties:
+          BgpAsn : 65000
+          IpAddress: !Ref 'OnPremGateway'
+          Tags:
+              - Key: Name
+                Value: !Sub "${EnvironmentName} On Prem Gateway"
+          Type: ipsec.1
+
+
+
 
 # Outputs: 
 
