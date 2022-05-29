@@ -40,6 +40,7 @@ Resources:
         - Key: Name
           Value: !Ref EnvironmentName
 
+
   PrivateSubnet1: 
       Type: AWS::EC2::Subnet
       Properties:
@@ -61,6 +62,23 @@ Resources:
           Tags: 
               - Key: Name 
                 Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
+
+
+  VPCVGW:
+      Type: "AWS::EC2::VPNGateway"
+      Properties: 
+          Type: ipsec.1
+          Tags:
+              - Key: Name
+                Value: !Sub "${EnvironmentName} Amazon-side Gateway"
+
+  AttachVpnGateway:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+          VpcId: !Ref VPC
+          VpnGatewayId:
+              Ref: VPCVGW
+
 
   PrivateRouteTable1:
       Type: AWS::EC2::RouteTable
@@ -106,31 +124,6 @@ Resources:
           RouteTableId: !Ref PrivateRouteTable2
           SubnetId: !Ref PrivateSubnet2
 
-  OurVPN:        
-      Type: "AWS::EC2::VPNConnection"
-      Properties: 
-          Type: ipsec.1
-          StaticRoutesOnly: true
-          CustomerGatewayId: 
-              !Ref ONPREMCGW
-          VpnGatewayId: 
-              !Ref VPCVGW
-
-  VPCVGW:
-      Type: "AWS::EC2::VPNGateway"
-      Properties: 
-          Type: ipsec.1
-          Tags:
-              - Key: Name
-                Value: !Sub "${EnvironmentName} Amazon-side Gateway"
-
-  AttachVpnGateway:
-      Type: AWS::EC2::VPCGatewayAttachment
-      Properties:
-          VpcId: !Ref VPC
-          VpnGatewayId:
-              Ref: VPCVGW
-
   ONPREMCGW:
       Type: "AWS::EC2::CustomerGateway"
       Properties:
@@ -141,43 +134,38 @@ Resources:
                 Value: !Sub "${EnvironmentName} On Prem Gateway"
           Type: ipsec.1
 
+  OurVPN:        
+      Type: "AWS::EC2::VPNConnection"
+      Properties: 
+          Type: ipsec.1
+          StaticRoutesOnly: true
+          CustomerGatewayId: 
+              !Ref ONPREMCGW
+          VpnGatewayId: 
+              !Ref VPCVGW
 
+Outputs: 
 
+  VPC: 
+      Description: A reference to the created VPC
+      Value: !Ref VPC
+      Export:
+        Name: !Sub ${EnvironmentName}-VPCID
 
-# Outputs: 
+  VPCVGW:
+      Description: A reference to the created VPNGateway
+      Value: !Ref VPCVGW
+      Export:
+          Name: !Sub ${EnvironmentName}-VPN-GTW-ID
 
-#   VPC: 
-#       Description: A reference to the created VPC
-#       Value: !Ref VPC
-#       Export:
-#         Name: !Sub ${EnvironmentName}-VPCID
+  AttachVpnGateway:
+      Description: A reference to the created VPCGatewayAttachment
+      Value: !Ref AttachVpnGateway
+      Export:
+          Name: !Sub ${EnvironmentName}-VPN-GTW-ATT-ID
 
-#   PrivateSubnets:
-#       Description: A list of the private subnets
-#       Value: !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2 ]]
-#       Export:
-#         Name: !Sub ${EnvironmentName}-PRIV-NETS
-
-#   PrivateSubnet1:
-#       Description: A reference to the private subnet in the 1st Availability Zone
-#       Value: !Ref PrivateSubnet1
-#       Export:
-#         Name: !Sub ${EnvironmentName}-PRI1-SN
-
-#   PrivateSubnet2: 
-#       Description: A reference to the private subnet in the 2nd Availability Zone
-#       Value: !Ref PrivateSubnet2
-#       Export:
-#         Name: !Sub ${EnvironmentName}-PRI2-SN
-
-#   VPCPrivateRouteTable1:
-#       Description: Private Routing AZ1
-#       Value: !Ref PrivateRouteTable1
-#       Export:
-#         Name: !Sub ${EnvironmentName}-PRI1-RT
-
-#   VPCPrivateRouteTable2:
-#       Description: Private Routing AZ2
-#       Value: !Ref PrivateRouteTable2
-#       Export:
-#         Name: !Sub ${EnvironmentName}-PRI2-RT
+  ONPREMCGW:
+      Description: A reference to the created CustomerGateway
+      Value: !Ref ONPREMCGW
+      Export:
+          Name: !Sub ${EnvironmentName}-VPN-CUSTOMER-GTW-ID
