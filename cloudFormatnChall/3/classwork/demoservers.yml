@@ -7,6 +7,10 @@ Parameters:
       Description: An environment name that will be prefixed to resource names
       Type: String
 
+  myLaunchTemplateVersionNumber:
+    Type: String
+    Default: 1
+
 
 Resources:
   LBSecGroup:
@@ -56,37 +60,88 @@ Resources:
         ToPort: 65535
         CidrIp: 0.0.0.0/0
 
+      # Launch Teamplate
+  myWebAppLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties: 
+      LaunchTemplateData:
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            apt-get update -y
+            apt-get install apache2 -y
+            systemctl start apache2.service
+            cd /var/www/html
+            echo "Udacity Demo Web Server Up and Running!" > index.html
+        ImageId: ami-0c4f7023847b90238
+        KeyName: vockey
+        SecurityGroupIds:
+          - sg-01032097d21bf8219
+        InstanceType: t3.small
+        BlockDeviceMappings:
+        - DeviceName: "/dev/sdk"
+          Ebs:
+            VolumeSize: '10'
 
-  WebAppLaunchConfig:
-    Type: AWS::AutoScaling::LaunchConfiguration
-    Properties:
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash
-          sudo apt-get update -y
-          sudo apt-get install apache2 -y
-          sudo systemctl start apache2.service          
-      # ToDo: AMI ID of Ubuntu Linux machine. Too get one, try creating a VM from the web console. 
-      ImageId: ami-0747bdcabd34c712a
-      # ToDo: Change the key-pair name, as applicable to you. 
-      KeyName: nd9990_keypair
-      SecurityGroups:
-      - Ref: WebServerSecGroup
-      InstanceType: t3.medium
-      BlockDeviceMappings:
-      - DeviceName: "/dev/sdk"
-        Ebs:
-          VolumeSize: '10'
-          
   WebAppGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier:
       - Fn::ImportValue: 
           !Sub "${EnvironmentName}-PRIV-NETS"
-      LaunchConfigurationName:
-        Ref: WebAppLaunchConfig
+      LaunchTemplate:
+        LaunchTemplateId: !Ref myWebAppLaunchTemplate
+        Version: !Ref myLaunchTemplateVersionNumber
       MinSize: '3'
       MaxSize: '5'
-      TargetGroupARNs:
-      - Ref: WebAppTargetGroup
+      # TargetGroupARNs:
+      # - Ref: WebAppTargetGroup
+
+
+
+
+  # Launch configuratn
+  # WebAppLaunchConfig:
+  #   Type: AWS::AutoScaling::LaunchConfiguration
+  #   Properties:
+  #     UserData:
+  #       Fn::Base64: !Sub |
+  #         #!/bin/bash
+  #         # Install docker
+  #         apt-get update
+  #         apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+  #         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  #         add-apt-repository \
+  #         "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+  #         $(lsb_release -cs) \
+  #         stable"
+  #         apt-get update
+  #         apt-get install -y docker-ce
+  #         usermod -aG docker ubuntu
+  #         docker run -p 8080:8080 tomcat:8.0
+
+  #     # ToDo: AMI ID of Ubuntu Linux machine. Too get one, try creating a VM from the web console. 
+  #     ImageId: ami-0c4f7023847b90238
+
+  #     # ToDo: Change the key-pair name, as applicable to you. 
+  #     KeyName: vockey
+  #     SecurityGroups:
+  #     - Ref: WebServerSecGroup
+  #     InstanceType: t3.medium
+  #     BlockDeviceMappings:
+  #     - DeviceName: "/dev/sdk"
+  #       Ebs:
+  #         VolumeSize: '10'
+
+  # WebAppGroup:
+  #   Type: AWS::AutoScaling::AutoScalingGroup
+  #   Properties:
+  #     VPCZoneIdentifier:
+  #     - Fn::ImportValue: 
+  #         !Sub "${EnvironmentName}-PRIV-NETS"
+  #     LaunchConfigurationName:
+  #       Ref: WebAppLaunchConfig
+  #     MinSize: '3'
+  #     MaxSize: '5'
+      # TargetGroupARNs:
+      # - Ref: WebAppTargetGroup

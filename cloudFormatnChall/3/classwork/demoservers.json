@@ -2,5 +2,10 @@
           {
                     "ParameterKey": "EnvironmentName",
                     "ParameterValue": "UdacityProject"
+          },
+
+          {
+                    "ParameterKey": "myLaunchTemplateVersionNumber",
+                    "ParameterValue": "1"
           }
 ]
