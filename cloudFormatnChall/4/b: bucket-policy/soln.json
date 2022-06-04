@@ -1,0 +1,17 @@
+{
+          "Version": "2012-10-17",
+          "Statement": [
+                    {
+                    "Sid": "IPAllow",
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": "s3:*",
+                    "Resource": "arn:aws:s3:::db-bucket-related/*",
+                    "Condition": {
+                              "IpAddress": {
+                              "aws:SourceIp": "75.101.230.58/32"
+                              }
+                    }
+                    }
+          ]
+}

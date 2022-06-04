@@ -1,0 +1,19 @@
+[
+          
+          {
+                    "ParameterKey": "EnvironmentName",
+                    "ParameterValue": "MySQL DB"
+          },
+          
+          {
+                    "ParameterKey": "DBUsername",
+                    "ParameterValue": "firstdb"
+          },
+          
+          {
+                    "ParameterKey": "DBPassword",
+                    "ParameterValue": "Babatunde2022"
+          }
+          
+]
+          

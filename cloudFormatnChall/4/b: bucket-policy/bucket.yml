@@ -1,0 +1,11 @@
+Parameter:
+EnvironmentName:
+    Description: AWS Bucket Policy
+    Type: String
+
+
+Resources:
+Type: AWS::S3::BucketPolicy
+Properties: 
+  Bucket: "db-bucket-related"
+  PolicyDocument: Json

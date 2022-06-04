@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  EnvironmentName:
+    Description: An environment name for the db
+    Type: String
+
+  DBUsername:
+    Description: Username for MySQL database access
+    Type: String
+    # NoEcho: 'true'
+    # MinLength: '1'
+    # MaxLength: '16'
+    # AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    # ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+
+  DBPassword:
+    Description: Password MySQL database access
+    Type: String
+    # NoEcho: 'true'
+    # MinLength: '8'
+    # MaxLength: '41'
+    # AllowedPattern: '[a-zA-Z0-9]*'
+    # ConstraintDescription: must contain only alphanumeric characters.
+
+
+Resources:
+  myDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties: 
+      DBSubnetGroupDescription: "Subnets to use for the DB"
+      DBSubnetGroupName: "Subnet Group"
+      SubnetIds: 
+        - subnet-013370246f2d9a215
+        - subnet-06a0b1ebf5af91c59
+      # Tags: 
+      #   - Tag
+
+  MyDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      VPCSecurityGroups: [sg-0a3515fad397649c5]
+
+      PubliclyAccessible: false
+      MultiAZ: false
+      AllocatedStorage: 20
+      DBInstanceClass: db.t2.small
+      Engine: MySQL
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+
+      # MasterUsername: !Sub "${myUsername}"
+      # MasterUserPassword: !Sub "${myPassword}"
+
+      DBSubnetGroupName: !Ref myDBSubnetGroup
+      Tags: 
+        - 
+          Key: "Name"
+          Value: !Sub "${EnvironmentName} MS SQL RDS"
+    DeletionPolicy: "Retain"
+
+
+# Outputs:
+#   MyDB:
+#   Description: InstanceId of the newly created RDS Instance
+#   Value: !Ref MyDB
+#   Export:
+#     Name: !Sub ${EnvironmentName}-MyDB
